@@ -8,7 +8,7 @@
 #include <array>
 #include <memory>
 #include "MyButton.h"
-
+#include "Solver.h"
 
 class CalculatorGUI : public QWidget
 {
@@ -17,7 +17,12 @@ public:
     CalculatorGUI(QWidget *parent = nullptr);
     ~CalculatorGUI();
 private slots:
-    void DigitClicked();
+    void CasualButtonClicked();
+    void TrigonometricButtonClicked();
+    void OpButtonClicked();
+    void DeleteLastButtonClicked();
+    void ClearAllButtonClicked();
+    void EqualButtonClicked();
 private:
     QGridLayout* mainLayout;
     QLineEdit* expressionLineEdit;
@@ -37,7 +42,6 @@ private:
     MyButton* clearAllBtn;
     MyButton* openedBracketBtn;
     MyButton* closedBracketBtn;
-
-
-   std::unique_ptr<MyButton> CreateButton(const QString& nameButton, const char* nameSlot);
+    std::unique_ptr<MyButton> CreateButton(const QString& nameButton, const char* nameSlot);
+    bool needToCleanLabel = false;
 };

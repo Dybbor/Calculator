@@ -24,8 +24,10 @@ add_executable(${PROJECT_NAME}
    src/main.cpp
    src/MainApplication.cpp
    src/MyButton.cpp
+   src/Solver.cpp
    include/MainApplication.h
    include/MyButton.h
+   include/Solver.h
    forms/test_form.ui
 )
 

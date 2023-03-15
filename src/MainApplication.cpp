@@ -1,10 +1,10 @@
 #include "MainApplication.h"
+
 #include <QFont>
+#include <cmath>
 #include <iostream>
 
-CalculatorGUI::CalculatorGUI(QWidget* parent)
-    : QWidget(parent)
-{
+CalculatorGUI::CalculatorGUI(QWidget* parent) : QWidget(parent) {
     setGeometry(0, 0, 540, 700);
     mainLayout = new QGridLayout(this);
     expressionLineEdit = new QLineEdit(this);
@@ -23,19 +23,41 @@ CalculatorGUI::CalculatorGUI(QWidget* parent)
     deleteLastBtn = new MyButton("x");
     openedBracketBtn = new MyButton("(");
     closedBracketBtn = new MyButton(")");
-
     for (size_t i = 0; i < 10; ++i) {
-        digitButtons[i] = std::move(CreateButton(QString::number(i), SLOT(DigitClicked())));
+        digitButtons[i] = CreateButton(QString::number(i), SLOT(CasualButtonClicked()));
     }
+
+    setStyleSheet("font-family: Roboto; \
+        font-style: normal; \
+        font-size: 25px;\
+        font-weight: 500; \
+        background-color: rgb(240, 240, 240);");
+
+    connect(mathPiBtn, &MyButton::clicked, this, &CalculatorGUI::CasualButtonClicked);
+    connect(pointOperatorBtn, &MyButton::clicked, this, &CalculatorGUI::CasualButtonClicked);
+    connect(plusOperatorBtn, &MyButton::clicked, this, &CalculatorGUI::OpButtonClicked);
+    connect(minusOperatorBtn, &MyButton::clicked, this, &CalculatorGUI::OpButtonClicked);
+    connect(multiplyOperatorBtn, &MyButton::clicked, this, &CalculatorGUI::OpButtonClicked);
+    connect(divideOperatorBtn, &MyButton::clicked, this, &CalculatorGUI::OpButtonClicked);
+    connect(sinOperatorBtn, &MyButton::clicked, this, &CalculatorGUI::TrigonometricButtonClicked);
+    connect(cosOperatorBtn, &MyButton::clicked, this, &CalculatorGUI::TrigonometricButtonClicked);
+    connect(tgOperatorBtn, &MyButton::clicked, this, &CalculatorGUI::TrigonometricButtonClicked);
+    connect(openedBracketBtn, &MyButton::clicked, this, &CalculatorGUI::CasualButtonClicked);
+    connect(closedBracketBtn, &MyButton::clicked, this, &CalculatorGUI::CasualButtonClicked);
+    connect(deleteLastBtn, &MyButton::clicked, this, &CalculatorGUI::DeleteLastButtonClicked);
+    connect(clearAllBtn, &MyButton::clicked, this, &CalculatorGUI::ClearAllButtonClicked);
+    connect(equalOperatorBtn, &MyButton::clicked, this, &CalculatorGUI::EqualButtonClicked);
 
     expressionLineEdit->setAlignment(Qt::AlignRight);
     expressionLineEdit->setReadOnly(true);
-    expressionLineEdit->setText("test");
+    expressionLineEdit->setText("0");
     expressionLineEdit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    expressionLineEdit->setStyleSheet("padding-right: 10px");
 
     resultExpressionLabel->setAlignment(Qt::AlignRight | Qt::AlignCenter);
-    resultExpressionLabel->setText("test label");
+    resultExpressionLabel->setText("0");
     resultExpressionLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    resultExpressionLabel->setStyleSheet("padding-right: 10px");
 
     mainLayout->addWidget(expressionLineEdit, 0, 0, 1, 4);
     mainLayout->addWidget(resultExpressionLabel, 1, 0, 1, 4);
@@ -59,24 +81,80 @@ CalculatorGUI::CalculatorGUI(QWidget* parent)
     mainLayout->addWidget(equalOperatorBtn, 7, 3);
     mainLayout->addWidget(mathPiBtn, 7, 0);
     mainLayout->addWidget(pointOperatorBtn, 7, 2);
-    
-    QFont font("Roboto");
-    font.setPixelSize(20);
-    setFont(font);
 
+    mainLayout->setSpacing(0);
     setLayout(mainLayout);
 }
 
-CalculatorGUI::~CalculatorGUI()
-{}
-
-std::unique_ptr<MyButton> CalculatorGUI::CreateButton(const QString& nameButton, const char* nameSlot)
-{
+std::unique_ptr<MyButton> CalculatorGUI::CreateButton(const QString& nameButton, const char* nameSlot) {
     std::unique_ptr<MyButton> newButton = std::make_unique<MyButton>(nameButton, this);
     connect(newButton.get(), SIGNAL(clicked()), this, nameSlot);
     return newButton;
 }
 
-void CalculatorGUI::DigitClicked() {
-    std::cout << "Hello !" << std::endl;
+void CalculatorGUI::CasualButtonClicked() {
+    MyButton* Sender = static_cast<MyButton*>(sender());
+    if (needToCleanLabel) {
+        needToCleanLabel = false;
+        resultExpressionLabel->setText("");
+        expressionLineEdit->setText(Sender->text());
+    } else {
+        QString text = expressionLineEdit->text() == "0" ? "" : expressionLineEdit->text();
+        expressionLineEdit->setText(text + Sender->text());
+    }
 }
+
+void CalculatorGUI::TrigonometricButtonClicked() {
+    MyButton* Sender = static_cast<MyButton*>(sender());
+    if (needToCleanLabel) {
+        needToCleanLabel = false;
+        expressionLineEdit->setText(Sender->text() + "(" + resultExpressionLabel->text());
+        resultExpressionLabel->setText("");
+    } else {
+        QString text = expressionLineEdit->text() == "0" ? Sender->text() : expressionLineEdit->text() + Sender->text();
+        expressionLineEdit->setText(text + "(");
+    }
+}
+
+void CalculatorGUI::OpButtonClicked() {
+    MyButton* Sender = static_cast<MyButton*>(sender());
+    if (needToCleanLabel) {
+        needToCleanLabel = false;
+        expressionLineEdit->setText(resultExpressionLabel->text() + Sender->text());
+        resultExpressionLabel->setText("");
+    } else {
+        QString text = expressionLineEdit->text() == "0" ? "" : expressionLineEdit->text();
+        expressionLineEdit->setText(text + Sender->text());
+    }
+}
+
+void CalculatorGUI::DeleteLastButtonClicked() {
+    QString text = expressionLineEdit->text();
+    if (text.size() > 1) {
+        text = text.first(text.size() - 1);
+    } else if (text.size() == 1 && text != "0") {
+        text = "0";
+    }
+    expressionLineEdit->setText(text);
+}
+
+void CalculatorGUI::ClearAllButtonClicked() {
+    expressionLineEdit->setText("0");
+    resultExpressionLabel->setText("");
+}
+
+void CalculatorGUI::EqualButtonClicked() {
+    needToCleanLabel = true;
+    auto expression = expressionLineEdit->text().replace(QChar(0x03C0), "3.1415926535").toStdString();
+    Solver solver(expression);
+    try {
+        auto res = std::round(solver.Calculate() * 1000000000) / 1000000000;
+        resultExpressionLabel->setText(QString::number(res, 'g', 10));
+    } catch (std::invalid_argument ex) {
+        resultExpressionLabel->setText(ex.what());
+    } catch (std::exception ex) {
+        std::cout << "What is it : " << ex.what() << std::endl;
+    }
+}
+
+CalculatorGUI::~CalculatorGUI() {}
